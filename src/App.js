@@ -1,67 +1,87 @@
 import React, { useEffect, useState } from 'react';
 import { ThemeProvider, styled } from '@mui/material/styles'; // Import styled from MUI
 import theme from './theme'; // Import the custom theme
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, TablePagination, TextField, Paper, Typography, Button } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, TablePagination, TextField, Paper, Typography, Button, Snackbar, Alert } from '@mui/material'; // Import MUI components
 
+// StyledTableCell to apply custom styling to table cells
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  fontWeight: 'bold',
+  fontWeight: 'bold', // Bold font for table headers
 }));
 
+// StyledTableRow to alternate row colors
 const StyledTableRow = styled(TableRow)(({ theme, index }) => ({
-  backgroundColor: index % 2 === 0 ? theme.palette.background.paper : theme.palette.grey[200],
+  backgroundColor: index % 2 === 0 ? theme.palette.background.paper : theme.palette.grey[200], // Alternating row colors
 }));
 
 function App() {
+  // State to store bike data
   const [bikes, setBikes] = useState([]);
+  // State for search input
   const [search, setSearch] = useState('');
+  // State for sorting configuration
   const [sortConfig, setSortConfig] = useState({ key: 'BikeID', direction: 'ascending' });
+  // State for pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  // State for error messages
+  const [error, setError] = useState('');
 
+  // Fetch bike data from JSON file
   useEffect(() => {
     fetch('/bikes_response.json')
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        return response.json();
+        return response.json(); // Parse JSON data
       })
-      .then(data => setBikes(data))
-      .catch(error => console.error('Error fetching data:', error));
+      .then(data => setBikes(data)) // Update bike data state
+      .catch(error => {
+        console.error('Error fetching data:', error); // Log error
+        setError('JSON is not valid or file is not connected correctly'); // Set custom error message
+      });
   }, []);
 
+  // Handle sorting request
   const handleRequestSort = (key) => {
     const direction = (sortConfig.key === key && sortConfig.direction === 'ascending') ? 'descending' : 'ascending';
-    setSortConfig({ key, direction });
+    setSortConfig({ key, direction }); // Update sort configuration
   };
 
+  // Handle page change in pagination
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    setPage(newPage); // Update page state
   };
 
+  // Handle change in rows per page
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setRowsPerPage(parseInt(event.target.value, 10)); // Update rows per page
+    setPage(0); // Reset to first page
   };
 
+  // Handle search input change
   const handleSearchChange = (event) => {
-    setSearch(event.target.value);
+    setSearch(event.target.value); // Update search input
   };
 
+  // Handle search on Enter key press
   const handleSearchKeyPress = (event) => {
     if (event.key === 'Enter') {
-      handleSearch();
+      handleSearch(); // Trigger search
     }
   };
 
+  // Handle search button click
   const handleSearch = () => {
     setPage(0); // Reset page to 0 on search
   };
 
+  // Filter bikes based on search input
   const filteredBikes = bikes.filter(bike =>
     Object.values(bike).some(value => value.toString().toLowerCase().includes(search.toLowerCase()))
   );
 
+  // Sort bikes based on sort configuration
   const sortedBikes = filteredBikes.sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
       return sortConfig.direction === 'ascending' ? -1 : 1;
@@ -72,6 +92,7 @@ function App() {
     return 0;
   });
 
+  // Paginate sorted bikes
   const paginatedBikes = sortedBikes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
@@ -89,6 +110,14 @@ function App() {
         />
         <Button variant="contained" onClick={handleSearch}>Search</Button>
         <br /><br />
+        {/* Show custom error message if there is an error */}
+        {error && (
+          <Snackbar open={Boolean(error)} autoHideDuration={6000} onClose={() => setError('')}>
+            <Alert onClose={() => setError('')} severity="error">
+              {error}
+            </Alert>
+          </Snackbar>
+        )}
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
