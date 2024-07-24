@@ -79,4 +79,4 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 ## Author
 
-This project was developed by [Talent Chambachemoto]. For any questions or issues, please contact [tazchazjnr@gmail.com].
+This project was developed by Talent Chambachemoto. For any questions or issues, please contact tazchazjnr@gmail.com.
