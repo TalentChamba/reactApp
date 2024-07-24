@@ -28,19 +28,47 @@ function App() {
 
   // Fetch bike data from JSON file
   useEffect(() => {
-    fetch('/bikes_response.json')
-      .then(response => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/bikes_response.json');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        return response.json(); // Parse JSON data
-      })
-      .then(data => setBikes(data)) // Update bike data state
-      .catch(error => {
-        console.error('Error fetching data:', error); // Log error
-        setError('JSON is not valid or file is not connected correctly'); // Set custom error message
-      });
+        const data = await response.json();
+
+        // Basic validation example (modify as needed based on your data schema)
+        if (!Array.isArray(data) || !data.every(item => item.BikeID && item.Make && item.Model)) {
+          throw new Error('Invalid data format');
+        }
+
+        // Sanitize and store data
+        setBikes(data.map(item => ({
+          ...item,
+          BikeID: sanitizeString(item.BikeID),
+          Make: sanitizeString(item.Make),
+          Model: sanitizeString(item.Model),
+          Year: sanitizeString(item.Year),
+          Displacement: sanitizeString(item.Displacement),
+          Price: sanitizeString(item.Price),
+          Terrain: sanitizeString(item.Terrain),
+          Description: sanitizeString(item.Description),
+        })));
+      } catch (error) {
+        console.error('Error fetching data:', error); // Log detailed error
+        setError('Unable to load bike data. Please try again later.'); // Set user-friendly error message
+      }
+    };
+
+    fetchData();
   }, []);
+
+  // Sanitize strings to prevent XSS attacks
+  const sanitizeString = (str) => {
+    if (typeof str === 'string') {
+      return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    return str;
+  };
 
   // Handle sorting request
   const handleRequestSort = (key) => {
